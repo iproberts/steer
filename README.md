@@ -139,6 +139,122 @@ rxcb_azel = [repmat(rxcb_az,num_rx_el,1) repelem(rxcb_el,num_rx_az,1)];
 
 ### Setting the Size and Resolution of the Transmit and Receive Spatial Neighborhoods
 
+Recall, STEER will search across some spatial neighborhoods to select transmit and receive beams that offer low self-interference. 
+The size and resolution of the spatial neighborhoods can be defined respectively as follows.
+
+```
+% neighborhood size
+Delta_az = 2;
+Delta_el = 2;
+
+% neighborhood resolution
+delta_az = 1;
+delta_el = 1;
+```
+
+The transmit and receive spatial neighborhoods have been assumed the same in this example but this can be generalized as desired.
+
+### Constructing Spatial Neighborhoods
+
+The transmit and receive spatial neighborhoods can be independently constructed with the following.
+
+```
+% TX and RX neighborhoods
+nbr_tx = construct_neighborhood(Delta_az_tx,Delta_el_tx,delta_az_tx,delta_el_tx);
+nbr_rx = construct_neighborhood(Delta_az_rx,Delta_el_rx,delta_az_rx,delta_el_rx);
+```
+
+The entire joint TX-RX neighborhood is then constructed as follows.
+
+```
+% full TX-RX neighborhood
+nbr = [repmat(nbr_tx,length(nbr_rx(:,1)),1) repelem(nbr_rx,length(nbr_tx(:,1)),1)];
+```
+
+Finally, we sort the neighborhood based on some distance metric. Here we use the sum squared distance of azimuth and elevation of the transmit and receive neighborhoods. Note that this is slightly different than the distance metric used in [1]; other distance metrics can be used as desired.
+
+```
+% sort full neighborhood by distance (can modify distance metric as desired)
+[~,idx] = sort(sum(nbr.^2,2));
+nbr = nbr(idx,:);
+```
+
+### Executing STEER
+
+Before running STEER, a self-interference target should be specified. For example, we used an INR target of -7 dB below (and in [1]).
+Note that lower thresholds will require longer execution time and more measurement overhead in practice.
+
+```
+% set INR target (design parameter)
+INR_tgt_dB = -7; % lower = stricter threshold
+```
+
+STEER is then executed by the following chunk of code. 
+
+```
+% reset counter
+idx_row = 0;
+
+% reset lookup table
+lut = [];
+
+% for each TX beam in codebook
+for idx_tx = 1:length(txcb_azel)
+    % initial TX steering direction
+    tx_azel = txcb_azel(idx_tx,:);
+    
+    % for each RX beam in codebook
+    for idx_rx = 1:length(rxcb_azel)
+        % initial RX steering direction
+        rx_azel = rxcb_azel(idx_rx,:);
+        
+        % reset min INR
+        INR_min_dB = Inf;
+        
+        % reset counter
+        num_meas = 0;
+                
+        % search over neighborhood
+        for idx_nbr = 1:num_nbr
+            % shift TX direction
+            tx_azel_shift = nbr(idx_nbr,1:2);
+            tx_azel_nbr = tx_azel + tx_azel_shift;
+            
+            % shift RX direction
+            rx_azel_shift = nbr(idx_nbr,3:4);
+            rx_azel_nbr = rx_azel + rx_azel_shift;
+            
+            % measure INR (this depends on either a model or measurements)
+            INR_meas_dB = 3*randn(1);
+            
+            % record number of measurements required
+            num_meas = num_meas + 1;
+            
+            % record nominal INR (with initial selection)
+            if idx_nbr == 1
+                INR_nom_dB = INR_meas_dB;
+            end
+            
+            % check if new minimum INR found
+            if INR_meas_dB < INR_min_dB
+                % record new best INR and steering directions
+                INR_min_dB = INR_meas_dB;
+                tx_azel_opt = tx_azel_nbr;
+                rx_azel_opt = rx_azel_nbr;
+                
+                % check if target met
+                if INR_meas_dB <= INR_tgt_dB
+                    break;
+                end
+            end
+        end
+        
+        % add to lookup table
+        idx_row = idx_row + 1;
+        lut(idx_row,:) = [tx_azel, tx_azel_opt, rx_azel, rx_azel_opt, INR_nom_dB, INR_min_dB, num_meas];
+    end
+end
+```
 
 
 ### Defining Transmit and Receive Codebooks
