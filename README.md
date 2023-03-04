@@ -6,14 +6,6 @@ This repository contains code related to the following paper on STEER, a beam se
 
 Using the code in this repo, which is based on the work presented in [1], users can run STEER in order to conduct research on full-duplex mmWave communication systems.
 
-The work of [1] was inpsired by phenomena observed when analyzing our nearly 6.5 million measurements of self-interference in the following papers.
-
-[2] I. P. Roberts, A. Chopra, T. Novlan, S. Vishwanath, and J. G. Andrews, "Beamformed Self-Interference Measurements at 28 GHz: Spatial Insights and Angular Spread," _IEEE Trans. Wireless Commun._, Nov. 2022, [PDF](https://ianproberts.com/pdf/pub/bfsi.pdf), [GitHub](https://ianproberts.com/bfsi).
-
-[3] I. P. Roberts, A. Chopra, T. Novlan, S. Vishwanath, and J. G. Andrews, "Spatial and Statistical Modeling of Multi-Panel Millimeter Wave Self-Interference," Submitted to _IEEE J. Sel. Areas Commun._, 2023, [PDF](https://ianproberts.com/pdf/pub/simodel.pdf), [GitHub](https://ianproberts.com/simodel).
-
-These measurements of self-interference were taken at 28 GHz in an anechoic chamber using two colocated 256-element phased arrays mounted on separate sides of an equilateral triangular platform. Please see [2] and [3] for details for a summary of these measurements.
-
 If you use this code or our paper in your work, please cite [1] with the following BibTeX.
 
 ```
@@ -29,7 +21,17 @@ If you use this code or our paper in your work, please cite [1] with the followi
 }
 ```
 
-Related work can be found at https://ianproberts.com.
+# Our Related Work
+
+The work of [1] was inpsired by phenomena observed when analyzing our nearly 6.5 million measurements of self-interference in the following papers.
+
+[2] I. P. Roberts, A. Chopra, T. Novlan, S. Vishwanath, and J. G. Andrews, "Beamformed Self-Interference Measurements at 28 GHz: Spatial Insights and Angular Spread," _IEEE Trans. Wireless Commun._, Nov. 2022, [PDF](https://ianproberts.com/pdf/pub/bfsi.pdf), [GitHub](https://ianproberts.com/bfsi).
+
+[3] I. P. Roberts, A. Chopra, T. Novlan, S. Vishwanath, and J. G. Andrews, "Spatial and Statistical Modeling of Multi-Panel Millimeter Wave Self-Interference," Submitted to _IEEE J. Sel. Areas Commun._, 2023, [PDF](https://ianproberts.com/pdf/pub/simodel.pdf), [GitHub](https://ianproberts.com/simodel).
+
+These measurements of self-interference were taken at 28 GHz in an anechoic chamber using two colocated 256-element phased arrays mounted on separate sides of an equilateral triangular platform. Please see [2] and [3] for details for a summary of these measurements.
+
+This related work can be found at https://ianproberts.com.
 
 # What is Self-Interference? 
 
