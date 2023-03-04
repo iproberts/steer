@@ -189,7 +189,7 @@ Note that lower thresholds will require longer execution time and more measureme
 INR_tgt_dB = -7; % lower = stricter threshold
 ```
 
-STEER is then executed by the following chunk of code. 
+STEER is then executed by the following chunk of code. For each possible initial transmit-receive beam selection based on the defined codebooks, STEER searches for the beam pair within the surrounding spatial neighborhood that meets the desired self-interference threshold while minimally deviating from the initial selection. If this threshold cannot be found, STEER will default to the beam pair that minimized self-interference. 
 
 ```
 % reset counter
@@ -256,6 +256,20 @@ for idx_tx = 1:length(txcb_azel)
 end
 ```
 
+The results of STEER are saved in the lookup table `lut`, where each row is a different initial transmit-receive beam selection. Its columns contain the following:
+- cols 1-2: initial TX direction in az-el (degrees)
+- cols 3-4: shifted TX direction in az-el (degrees)
+- cols 5-6: initial RX direction in az-el (degrees)
+- cols 7-8: shifted RX direction in az-el (degrees)
+- col 9: INR (in dB) with initial TX-RX directions
+- col 10: INR (in dB) with shifted TX-RX directions
+- col 11: number of measurements taken
+
+An example row from `lut` is shown below. The initial transmit direction was (16,8). The shifted transmit direction is (17,6). The initial receive direction was (32,0). The shifted receive direction is (31,-2). A shift of (+1,-2) was applied to the transmit beam. A shift of (-1,-2) was applied to the receive beam. These shifts resulted in an INR reduction from 7.1 dB to -10.9 dB. This was the first beam pair found that offered an INR below `INR_tgt_dB` and required 435 measurements to find.
+
+| Initial TX Az. | Initial TX El. | Shifted TX Az. | Shifted TX El. | Initial RX Az. | Initial RX El. | Shifted RX Az. | Shifted RX El. | Initial INR | Resulting INR | Number of Measurements |
+| :----: | :----: |  :----: | :----: | :----: | :----: | :----: | :----: | :----: | :----: | :----: |
+| 16 | 8 | 17 | 6 | 32 | 0 | 31 | -2 | 7.1 | -10.9 | 435 |
 
 ### Defining Transmit and Receive Codebooks
 
