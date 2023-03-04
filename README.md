@@ -80,7 +80,7 @@ By maintaining high SNR and reducing self-interference, high SINRs can be achiev
 
 This repo contains the following MATLAB code:
  - a main script `main.m` illustrating example usage
- - a function `construct_neighborhood.` that can be used to construct a spatial neighborhood
+ - a function `construct_neighborhood.m` that can be used to construct a spatial neighborhood
 
 # Example Usage
 
@@ -256,6 +256,17 @@ for idx_tx = 1:length(txcb_azel)
 end
 ```
 
+Note that the following lines should be replaced with measurements or with a model that you have chosen.
+
+```
+% measure INR (this depends on either a model or measurements)
+INR_meas_dB = 3*randn(1);
+```
+
+Our previous work [2] or [3] could be used to statistically model `INR_meas_dB`. Or you may want to compute `INR_meas_dB` based on some self-interference channel model. If you have collected measurements, you would need to fetch the measured INR corresponding to the particular transmit and receive beams of interest. If you have any questions about this, please reach out to the corresponding author of [1].
+
+### Output: Lookup Table
+
 The results of STEER are saved in the lookup table `lut`, where each row is a different initial transmit-receive beam selection. Its columns contain the following:
 - cols 1-2: initial TX direction in az-el (degrees)
 - cols 3-4: shifted TX direction in az-el (degrees)
@@ -265,19 +276,30 @@ The results of STEER are saved in the lookup table `lut`, where each row is a di
 - col 10: INR (in dB) with shifted TX-RX directions
 - col 11: number of measurements taken
 
-An example row from `lut` is shown below. The initial transmit direction was (16,8). The shifted transmit direction is (17,6). The initial receive direction was (32,0). The shifted receive direction is (31,-2). A shift of (+1,-2) was applied to the transmit beam. A shift of (-1,-2) was applied to the receive beam. These shifts resulted in an INR reduction from 7.1 dB to -10.9 dB. This was the first beam pair found that offered an INR below `INR_tgt_dB` and required 435 measurements to find.
+An example row from `lut` is shown below. 
 
 | Initial TX Az. | Initial TX El. | Shifted TX Az. | Shifted TX El. | Initial RX Az. | Initial RX El. | Shifted RX Az. | Shifted RX El. | Initial INR | Resulting INR | Number of Measurements |
 | :----: | :----: |  :----: | :----: | :----: | :----: | :----: | :----: | :----: | :----: | :----: |
 | 16 | 8 | 17 | 6 | 32 | 0 | 31 | -2 | 7.1 | -10.9 | 435 |
 
-### Defining Transmit and Receive Codebooks
+The initial transmit direction was (16,8). The shifted transmit direction is (17,6). The initial receive direction was (32,0). The shifted receive direction is (31,-2). A shift of (+1,-2) was applied to the transmit beam. A shift of (-1,-2) was applied to the receive beam. These shifts resulted in an INR reduction from 7.1 dB to -10.9 dB. This was the first beam pair found that offered an INR below `INR_tgt_dB` and required 435 measurements to find.
 
-The degree of self-interference incurred by the base station will depend on the transmit beam and receive beam that it uses to serve downlink and uplink users. Each transmit-receive beam pair will couple a unique amount of self-interference. 
+### Output: Self-Interference Distribution
 
-We can draw a statistical realization of this coupling for each beam pair across the codebooks using the script `main.m`, which implements our model in MATLAB.
+If we plot the CDFs of columns 9 and 10, we can observe the reduction in self-interference offered by STEER across all possible initial transmit-receive beam selections.
+
+<p align="center">
+<img src="https://user-images.githubusercontent.com/52005199/222924224-ab2d5564-72c6-4db5-a523-d1a41141511f.svg"/>
+</p>
 
 
+### Output: Number of Measurements
+
+If we plot the CDF of column 11, we can see how many measurements are required when executing STEER across all possible initial transmit-receive beam selections.
+
+<p align="center">
+<img src="https://user-images.githubusercontent.com/52005199/222924306-d203a618-8aed-4e82-bf5f-3ef3776ab8fd"/>
+</p>
 
 # Questions and Feedback
 
