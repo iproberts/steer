@@ -76,100 +76,77 @@ STEER makes use of self-interference measurements across small spatial neighborh
 Put simply, STEER slightly shifts the transmit and receive beams at a full-duplex mmWave transceiver to reduce self-interference---with the goal being that these slight shifts do not prohibitively degrade downlink or uplink quality (i.e., SNR).
 By maintaining high SNR and reducing self-interference, high SINRs can be achieved with STEER.
 
-# Model Summary
-
-Our statistical model of self-interference is based on two characteristics observed in our measurements:
-1. On a large scale (at a high level), there is a connection between the steering directions of the transmit and receive beams and the degree of self-interference incurred. Broadly speaking, some transmit and receive directions tend to incur high self-interference while others tend to incur low self-interference.
-2. On a small scale (within small spatial neighborhoods), the system incurs seemingly random amounts of self-interference. Slightly shifting the transmit and receive steering directions can dramatically alter the degree of self-interference coupled.
-
-<p align="center">
-<img src="https://user-images.githubusercontent.com/52005199/221431446-ae3a8393-2c4b-41e8-a66c-fcdf258f63e4.svg"/>
-</p>
-
-We leverage these large-scale and small-scale characteristics to construct a stochastic model of self-interference that both statistically and spatially aligns with our measurements. 
-A block diagram summarizing our model is shown above.
-For particular transmit and receive beams, a mean parameter is estimated, which dictates the location of the distribution from which self-interference is drawn.
-The variance of this distribution is dictated by the mean parameter and other model parameters.
-This approach allows our model to capture the large-scale spatial trends in self-interference along with the small-scale variability observed over small spatial neighborhoods.
-With appropriate parameterization, our model has the potential to be extended to other systems and environments beyond our own. 
-
-<p align="center">
-<img src="https://user-images.githubusercontent.com/52005199/221431451-9f7bec04-4659-4b9c-95d5-97deeb3f2345.svg"/>
-</p>
-
-To construct our model, we uncovered a coarse geometric approximation of the self-interference channel from within our measurements, which suggests that the dominant coupling between the transmit and receive arrays manifests as clusters of rays in a far-field manner (as illustrated above), rather than in a idealized near-field, spherical-wave fashion.
-This is a novel finding that can steer future work aiming to model self-interference MIMO channels in full-duplex mmWave systems.
-
 # Contents
 
 This repo contains the following MATLAB code:
  - a main script `main.m` illustrating example usage
- - an `array` object that can be used to create and interface with arbitrary antenna arrays
+ - a function `construct_neighborhood.` that can be used to construct a spatial neighborhood
 
 # Example Usage
 
-Suppose a full-duplex mmWave base station employs a codebook of transmit beams that it uses to serve downlink and a codebook of receive beams that it uses to serve uplink. 
+We will now walk through `main.m` to summarize its usage.
 
-The degree of self-interference incurred by the base station will depend on the transmit beam and receive beam that it uses to serve downlink and uplink users. Each transmit-receive beam pair will couple a unique amount of self-interference. 
+Suppose a full-duplex mmWave base station employs a codebook of transmit beams that it uses to conduct downlink beam alignment and a codebook of receive beams that it uses to conduct uplink beam alignment.
+Whichever beams get selected from these codebooks via conventional beam alignment will be used to initialize STEER.
 
-We can draw a statistical realization of this coupling for each beam pair across the codebooks using the script `main.m`, which implements our model in MATLAB.
+For each transmit-receive beam pair, we can run STEER to jointly select slightly shifted versions of these beams.
+When running STEER, there are five design parameters:
+- size of the transmit neighborhood
+- resolution of the transmit neighborhood
+- size of the receive neighborhood
+- resolution of the receive neighborhood
+- a self-interference target
 
-### Set System and Model Parameters
-
-The first step is to set the desired system and model parameters. By default, the parameters provided in [1, Table II] can be used. 
-
-```
-% System parameters
-EIRP_dBm = 60; % transmit array EIRP
-P_noise_dBm = -68; % receive array integrated noise power (includes amplification)
-
-% Model parameters: location and scale parameters for mu
-G_dB = -129.00; % location parameter
-xi = 0.502; % scale parameter
-
-% Model parameters: cluster centers and angular spreads for H_bar
-aod_az_list = [-174 126 -118 126]; % AoD azimuth
-aod_el_list = [0 0 0 0]; % AoD elevation
-aoa_az_list = [-122 -122 -122 118]; % AoA azimuth
-aoa_el_list = [0 0 0 0]; % AoA elevation
-spread_az = 4; % angular spread in azimuth
-spread_el = 3; % angular spread in elevation
-spread_az_res = 1; % angular spread resolution in azimuth
-spread_el_res = 1; % angular spread resolution in elevation
-
-% Model parameters: estimator and variance parameters for sigma^2
-alpha = -0.733; % slope
-beta = 42.53; % bias
-nu_squared = 126.091; % variance
-```
+Note that in [1], we assumed the size and resolution of the transmit and receive neighborhoods to be equal but this can be generalized straightforwardly.
 
 ### Define Transmit and Receive Codebooks
 
-The transmit and receive codebooks used at the full-duplex base station can be set by defining the steering directions of the codebooks' beams. The steering direction of each beam contains a component in azimuth and elevation (see [1, Fig. 2]). 
+Before running STEER, the transmit and receive codebooks used for conventional beam alignment at the full-duplex base station must be defined.
+This can be done by defining the steering directions of the codebooks' beams. 
+The steering direction of each beam contains a component in azimuth and elevation, as illustrated below.
+
+<p align="center">
+<img src="https://user-images.githubusercontent.com/52005199/222922576-377d2020-43aa-4f13-9db8-b9ada9246846.svg"/>
+</p>
 
 In the example below, the transmit and receive codebooks are identical. Each codebook has beams that span in azimuth from -56 deg. to 56 deg. in 8 deg. steps and in elevation from -8 deg. to 8 deg. in 8 deg. steps. This amounts to a total of 45 beams in each codebook, meaning there are 2025 transmit-receive beam pairs.
 
 ```
-% transmit directions (e.g., transmit codebook)
-tx_dir_az = flip([-56:8:56]); % flips are not necessary, just for plotting convenience
-tx_dir_el = flip([-8:8:8]);
+% codebooks span azimuth and elevation
+az_deg = [-56:8:56].';
+el_deg = [-8:8:8].';
 
-% receive directions (e.g., receive codebook)
-rx_dir_az = tx_dir_az; % assume same for simplicity
-rx_dir_el = tx_dir_el;
+% assume TX and RX codebooks to be the same
+txcb_az = az_deg;
+txcb_el = el_deg;
+rxcb_az = az_deg;
+rxcb_el = el_deg;
 ```
 
 The azimuth-elevation of each transmit and receive steering direction can then be populated as follows.
 
 ```
-% each transmit az-el pair
-tx_dir_az_el_deg = [repelem(tx_dir_az(:),length(tx_dir_el)),repmat(tx_dir_el(:),length(tx_dir_az),1)];
-num_tx = length(tx_dir_az_el_deg(:,1));
+% full TX codebook in az-el
+num_tx_az = length(txcb_az);
+num_tx_el = length(txcb_el);
+txcb_azel = [repmat(txcb_az,num_tx_el,1) repelem(txcb_el,num_tx_az,1)];
 
-% each receive az-el pair
-rx_dir_az_el_deg = [repelem(rx_dir_az(:),length(rx_dir_el)),repmat(rx_dir_el(:),length(rx_dir_az),1)];
-num_rx = length(rx_dir_az_el_deg(:,1));
+% full RX codebook in az-el
+num_rx_az = length(rxcb_az);
+num_rx_el = length(rxcb_el);
+rxcb_azel = [repmat(rxcb_az,num_rx_el,1) repelem(rxcb_el,num_rx_az,1)];
 ```
+
+### Setting the Size and Resolution of the Transmit and Receive Spatial Neighborhoods
+
+
+
+### Defining Transmit and Receive Codebooks
+
+The degree of self-interference incurred by the base station will depend on the transmit beam and receive beam that it uses to serve downlink and uplink users. Each transmit-receive beam pair will couple a unique amount of self-interference. 
+
+We can draw a statistical realization of this coupling for each beam pair across the codebooks using the script `main.m`, which implements our model in MATLAB.
+
 
 
 # Questions and Feedback
