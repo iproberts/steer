@@ -292,14 +292,18 @@ If we plot the CDFs of columns 9 and 10, we can observe the reduction in self-in
 <img src="https://user-images.githubusercontent.com/52005199/222924224-ab2d5564-72c6-4db5-a523-d1a41141511f.svg"/>
 </p>
 
+From this plot, we can see that a median user without STEER has an INR of about 0 dB, whereas with STEER, a median user has an INR of around -7 dB.
+
 
 ### Output: Number of Measurements
 
 If we plot the CDF of column 11, we can see how many measurements are required when executing STEER across all possible initial transmit-receive beam selections.
 
 <p align="center">
-<img src="https://user-images.githubusercontent.com/52005199/222924306-d203a618-8aed-4e82-bf5f-3ef3776ab8fd"/>
+<img src="https://user-images.githubusercontent.com/52005199/222924306-d203a618-8aed-4e82-bf5f-3ef3776ab8fd.svg"/>
 </p>
+
+From this plot, we can see that 50% of the time, STEER requires 65 measurements. Exhaustively searching the entire neighborhood in this example requires 625 measurements (25 candiates in transmit neighborhood times 25 candidates in receive neighborhood).
 
 # Questions and Feedback
 
